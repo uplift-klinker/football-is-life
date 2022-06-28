@@ -1,0 +1,11 @@
+version: "3.9"
+services:
+  api:
+    build:
+      dockerfile: src/Football.Is.Life.Api.Host/Dockerfile
+  identity:
+    build:
+      dockerfile: src/Football.Is.Life.Identity.Host/Dockerfile
+  web:
+    build:
+      dockerfile: src/Football.Is.Life.Web.Host/Dockerfile

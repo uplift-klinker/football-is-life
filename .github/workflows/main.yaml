@@ -1,0 +1,32 @@
+on:
+  push:
+    branches:
+      - main
+jobs:
+  main_build:
+    env: 
+      SOLUTION_FILE_PATH: ${{ github.workspace }}/Football.Is.Life.sln
+      API_HOST_PATH: ${{ github.workspace }}/src/Football.Is.Life.Api.Host/Football.Is.Life.Api.Host.csproj
+      API_HOST_OUTPUT_PATH: ${{ github.workspace }}/dist/api
+      WEB_HOST_PATH: ${{ github.workspace }}/src/Football.Is.Life.Web.Host/Football.Is.Life.Web.Host.csproj
+      WEB_HOST_OUTPUT_PATH: ${{ github.workspace }}/dist/web
+      IDENTITY_HOST_PATH: ${{ github.workspace }}/src/Football.Is.Life.Identity.Host/Football.Is.Life.Identity.Host.csproj
+      IDENTITY_HOST_OUTPUT_PATH: ${{ github.workspace }}/dist/identity
+      TEST_RESULTS_DIRECTORY: ${{ github.workspace }}/test-results
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Install Tools
+        run: dotnet tool restore
+      
+      - name: Check Linting
+        run: dotnet csharpier --check
+      
+      - name: Run All Tests
+        run: |
+          dotnet test "${SOLUTION_FILE_PATH}"
+            -r "${TEST_RESULTS_DIRECTORY}" \
+            --collect "XPlat Code Coverage" \
+            --logger trx
+      
