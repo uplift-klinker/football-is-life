@@ -1,3 +1,0 @@
-name: Football.Is.Life.IaC
-runtime: dotnet
-description: A minimal Azure Native C# Pulumi program
