@@ -1,0 +1,19 @@
+{
+  "name": "@football-is-life/identity",
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "dev": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@football-is-life/observability": "workspace:*",
+    "oidc-provider": "8.5.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/oidc-provider": "8.5.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

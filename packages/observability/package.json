@@ -1,0 +1,17 @@
+{
+  "name": "@football-is-life/observability",
+  "type": "module",
+  "module": "src/index.ts",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "roarr": "7.21.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

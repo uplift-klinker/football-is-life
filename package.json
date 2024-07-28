@@ -1,0 +1,19 @@
+{
+  "name": "@football-is-life/source",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "build": "bun run --filter=* build",
+    "dev": "bun run --filter=* dev",
+    "test": "bun run --filter=* test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "5.5.4"
+  }
+}
