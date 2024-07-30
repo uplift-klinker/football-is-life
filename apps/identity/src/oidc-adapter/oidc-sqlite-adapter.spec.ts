@@ -4,6 +4,8 @@ import {createOidcSqliteAdapterFactory, OidcSqliteAdapter} from "./oidc-sqlite-a
 import type {AdapterFactory} from "oidc-provider";
 import {PAYLOAD_TABLE_NAME} from "./sql/payload-table-name.ts";
 
+const SELECT_PAYLOADS_SQL = `select id, name, json from ${PAYLOAD_TABLE_NAME};`
+
 describe('OidcSqliteAdapter', () => {
     let database: Database;
     let factory: AdapterFactory;
@@ -26,8 +28,17 @@ describe('OidcSqliteAdapter', () => {
             aud: ['audience']
         }, 3600);
 
-        const result = database.query(`select id, name, json from ${PAYLOAD_TABLE_NAME};`)
-            .all();
+        const result = database.query(SELECT_PAYLOADS_SQL).all();
+        expect(result).toHaveLength(1);
+    })
+
+    test('when existing payload is upserted then updates the existing record', async () => {
+        const adapter = factory('Grant');
+
+        await adapter.upsert('123', {}, 20);
+        await adapter.upsert('123', {aud: ['aud']}, 40);
+
+        const result = database.query(SELECT_PAYLOADS_SQL).all();
         expect(result).toHaveLength(1);
     })
 })
