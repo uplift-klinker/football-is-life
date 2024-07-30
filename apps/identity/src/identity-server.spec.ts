@@ -9,14 +9,19 @@ describe('createIdentityServer', () => {
         server = createIdentityServer({
             port: 0
         });
-        await server.start();
-        baseUrl = await server.baseUrl();
     })
 
     test('should bind server to provided port', async () => {
+        await server.start();
+        baseUrl = await server.baseUrl();
+
         const response = await fetch(`${baseUrl}/.health/status`);
 
         expect(response.status).toBe(200);
+    })
+
+    test('when getting address before starting then throws error', async () => {
+        await expect(server.baseUrl()).rejects.toThrow(Error);
     })
 
     afterEach(async () => {

@@ -1,0 +1,22 @@
+name: CI Build
+on:
+  push:
+    branches:
+      - main
+concurrency: ci_build
+jobs:
+  ci_build:
+    name: CI Build
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install Dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Tests
+        run: bun run test
+

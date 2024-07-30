@@ -11,6 +11,7 @@ export type IdentityServer = {
     start: () => Promise<void>;
     stop: () => Promise<void>;
 }
+
 export function createIdentityServer(options: CreateIdentityServerOptions): IdentityServer {
     const app = express();
     app.use('/.health', createHealthRouter());
@@ -34,15 +35,18 @@ export function createIdentityServer(options: CreateIdentityServerOptions): Iden
             server = app.listen(options.port, resolve);
         }),
         stop: () => new Promise((resolve, reject) => {
-            if (server) {
-                server.close(err => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve();
-                    }
-                })
+            if (!server) {
+                resolve();
+                return;
             }
+
+            server.close(err => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            })
         })
     }
 }
