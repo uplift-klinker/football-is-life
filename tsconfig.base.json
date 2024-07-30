@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     // Enable latest features
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
@@ -22,6 +23,12 @@
     // Some stricter flags (disabled by default)
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
-  }
+    "noPropertyAccessFromIndexSignature": false,
+
+    "paths": {
+      "@football-is-life/observability": [
+        "packages/observability/src/index.ts"
+      ]
+    }
+  },
 }
