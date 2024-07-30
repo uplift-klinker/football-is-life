@@ -3,6 +3,8 @@ import {Database} from 'bun:sqlite';
 import {createOidcSqliteAdapterFactory, OidcSqliteAdapter} from "./oidc-sqlite-adapter.ts";
 import type {AdapterFactory} from "oidc-provider";
 import {PAYLOAD_TABLE_NAME} from "./sql/payload-table-name.ts";
+import {logger} from "@football-is-life/observability";
+import {OidcPayload} from "./oidc-payload-row.ts";
 
 const SELECT_PAYLOADS_SQL = `select id, name, json from ${PAYLOAD_TABLE_NAME};`
 
@@ -28,8 +30,16 @@ describe('OidcSqliteAdapter', () => {
             aud: ['audience']
         }, 3600);
 
-        const result = database.query(SELECT_PAYLOADS_SQL).all();
+        const result = database.query(SELECT_PAYLOADS_SQL)
+            .as(OidcPayload)
+            .all();
         expect(result).toHaveLength(1);
+        expect(result[0].name).toEqual('Grant');
+        expect(result[0].id).toEqual('this-is-the-id');
+        expect(result[0].asPayload()).toEqual({
+            aud: ['audience'],
+            expiresIn: 3600
+        });
     })
 
     test('when existing payload is upserted then updates the existing record', async () => {
@@ -38,7 +48,12 @@ describe('OidcSqliteAdapter', () => {
         await adapter.upsert('123', {}, 20);
         await adapter.upsert('123', {aud: ['aud']}, 40);
 
-        const result = database.query(SELECT_PAYLOADS_SQL).all();
+        const result = database.query(SELECT_PAYLOADS_SQL)
+            .as(OidcPayload)
+            .all();
         expect(result).toHaveLength(1);
+        expect(result[0].name).toEqual('Grant');
+        expect(result[0].id).toEqual('123');
+        expect(result[0].asPayload()).toEqual({aud: ['aud'], expiresIn: 40});
     })
 })
