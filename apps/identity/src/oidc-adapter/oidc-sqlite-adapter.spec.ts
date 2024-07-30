@@ -3,7 +3,6 @@ import {Database} from 'bun:sqlite';
 import {createOidcSqliteAdapterFactory, OidcSqliteAdapter} from "./oidc-sqlite-adapter.ts";
 import type {AdapterFactory} from "oidc-provider";
 import {PAYLOAD_TABLE_NAME} from "./sql/payload-table-name.ts";
-import {logger} from "@football-is-life/observability";
 import {OidcPayload} from "./oidc-payload-row.ts";
 
 const SELECT_PAYLOADS_SQL = `select id, name, json from ${PAYLOAD_TABLE_NAME};`
