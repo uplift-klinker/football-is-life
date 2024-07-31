@@ -7,6 +7,9 @@ import {OidcPayload} from "./oidc-payload.ts";
 import {createFindByIdQuery} from "./sql/create-find-by-id-query.ts";
 import {createFindByUserCodeQuery} from "./sql/create-find-by-user-code-query.ts";
 import {createFindByUidQuery} from "./sql/create-find-by-uid-query.ts";
+import {addSeconds} from "date-fns";
+import {createConsumeCommand} from "./sql/create-consume-command.ts";
+import {createDestroyCommand} from "./sql/create-destroy-command.ts";
 
 export function createOidcSqliteAdapterFactory(database: Database): AdapterFactory {
     return (name) => new OidcSqliteAdapter(database, name);
@@ -25,7 +28,7 @@ export class OidcSqliteAdapter implements Adapter {
             id: id,
             json: JSON.stringify({
                 ...payload,
-                expiresIn
+                expiresAt: addSeconds(new Date(), expiresIn).toISOString(),
             }),
             uid: payload.uid,
             userCode: payload.userCode,
@@ -54,12 +57,20 @@ export class OidcSqliteAdapter implements Adapter {
         return result ? result.asPayload() : undefined;
     }
 
-    consume(id: string): Promise<undefined | void> {
-        throw new Error("Method not implemented.");
+    async consume(id: string): Promise<undefined | void> {
+        const existing = await this.find(id);
+        const updatedJson = JSON.stringify({
+            ...existing,
+            consumed: new Date().getTime() / 1000
+        });
+        const command = createConsumeCommand(this.name, id, updatedJson);
+        await this.executeCommand(command);
     }
 
-    destroy(id: string): Promise<undefined | void> {
-        throw new Error("Method not implemented.");
+    async destroy(id: string): Promise<undefined | void> {
+        await this.initialize();
+        const command = createDestroyCommand(this.name, id);
+        await this.executeCommand(command);
     }
 
     revokeByGrantId(grantId: string): Promise<undefined | void> {
