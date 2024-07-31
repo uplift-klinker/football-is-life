@@ -6,6 +6,7 @@ import {createPayloadUpsertCommand} from "./sql/create-upsert-payload-command.ts
 import {OidcPayload} from "./oidc-payload.ts";
 import {createFindByIdQuery} from "./sql/create-find-by-id-query.ts";
 import {createFindByUserCodeQuery} from "./sql/create-find-by-user-code-query.ts";
+import {createFindByUidQuery} from "./sql/create-find-by-uid-query.ts";
 
 export function createOidcSqliteAdapterFactory(database: Database): AdapterFactory {
     return (name) => new OidcSqliteAdapter(database, name);
@@ -46,8 +47,11 @@ export class OidcSqliteAdapter implements Adapter {
         return result ? result.asPayload() : undefined;
     }
 
-    findByUid(uid: string): Promise<AdapterPayload | undefined | void> {
-        throw new Error("Method not implemented.");
+    async findByUid(uid: string): Promise<AdapterPayload | undefined | void> {
+        await this.initialize();
+        const query = createFindByUidQuery(this.name, uid);
+        const result = await this.executeSingleQuery(query, OidcPayload);
+        return result ? result.asPayload() : undefined;
     }
 
     consume(id: string): Promise<undefined | void> {

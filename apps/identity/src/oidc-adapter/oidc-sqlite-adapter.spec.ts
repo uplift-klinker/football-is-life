@@ -85,4 +85,20 @@ describe('OidcSqliteAdapter', () => {
             expect(payload).toEqual({userCode: 'user-code', expiresIn: 2400});
         })
     })
+
+    describe('findByUid', () => {
+        test('when finding missing payload then returns undefined', async () => {
+            const payload = await adapter.findByUid('my-uid');
+
+            expect(payload).toEqual(undefined);
+        })
+
+        test('when finding previously inserted payload then returns payload by user code', async () => {
+            await adapter.upsert('the-id', {uid: 'some-uuid'}, 2400);
+
+            const payload = await adapter.findByUid('some-uuid');
+
+            expect(payload).toEqual({uid: 'some-uuid', expiresIn: 2400});
+        })
+    })
 })
