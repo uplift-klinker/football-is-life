@@ -1,1 +1,0 @@
-export const PAYLOAD_TABLE_NAME = 'oidc_payload';

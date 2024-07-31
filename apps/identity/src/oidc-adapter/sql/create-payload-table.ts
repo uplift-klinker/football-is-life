@@ -1,12 +1,12 @@
-import {PAYLOAD_TABLE_NAME} from "./payload-table-name.ts";
+import {PAYLOAD_TABLE_NAME, PayloadTableColumns} from "./oidc-payload-schema.ts";
 
 export const CREATE_PAYLOAD_TABLE_SQL = `
     create table if not exists ${PAYLOAD_TABLE_NAME} (
-        name TEXT NOT NULL,
-        id TEXT NOT NULL,
-        userCode TEXT NULL,
-        uid TEXT NULL,
-        json TEXT NOT NULL,
-        PRIMARY KEY (name, id)
+        ${PayloadTableColumns.name} TEXT NOT NULL,
+        ${PayloadTableColumns.id} TEXT NOT NULL,
+        ${PayloadTableColumns.json} TEXT NOT NULL,
+        ${PayloadTableColumns.userCode} TEXT NULL,
+        ${PayloadTableColumns.uid} TEXT NULL,
+        PRIMARY KEY (${PayloadTableColumns.name}, ${PayloadTableColumns.id})
     );
 `;

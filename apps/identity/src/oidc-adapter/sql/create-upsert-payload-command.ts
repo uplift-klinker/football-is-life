@@ -1,14 +1,23 @@
-import {PAYLOAD_TABLE_NAME} from "./payload-table-name.ts";
 import type {SqliteStatement} from "./sqlite-statement.ts";
 import type {IOidcPayload} from "../oidc-payload.ts";
+import {PAYLOAD_TABLE_NAME, PayloadTableColumns} from "./oidc-payload-schema.ts";
 
 const UPSERT_PAYLOAD_SQL = `
-    insert into ${PAYLOAD_TABLE_NAME}(name, id, json, userCode, uid)
+    insert into ${PAYLOAD_TABLE_NAME}(
+        ${PayloadTableColumns.name}, 
+        ${PayloadTableColumns.id}, 
+        ${PayloadTableColumns.json}, 
+        ${PayloadTableColumns.userCode}, 
+        ${PayloadTableColumns.uid}
+    )
     values ($name, $id, $json, $userCode, $uid)
-    on conflict(name, id) do 
-    update set json = $json,
-               userCode = $userCode,
-               uid = $uid;
+    on conflict(
+        ${PayloadTableColumns.name}, 
+        ${PayloadTableColumns.id}
+    ) do 
+    update set ${PayloadTableColumns.json} = $json,
+               ${PayloadTableColumns.userCode} = $userCode,
+               ${PayloadTableColumns.uid} = $uid;
 `;
 
 
