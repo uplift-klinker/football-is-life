@@ -8,16 +8,18 @@ const UPSERT_PAYLOAD_SQL = `
         ${PayloadTableColumns.id}, 
         ${PayloadTableColumns.json}, 
         ${PayloadTableColumns.userCode}, 
-        ${PayloadTableColumns.uid}
+        ${PayloadTableColumns.uid},
+        ${PayloadTableColumns.grantId}
     )
-    values ($name, $id, $json, $userCode, $uid)
+    values ($name, $id, $json, $userCode, $uid, $grantId)
     on conflict(
         ${PayloadTableColumns.name}, 
         ${PayloadTableColumns.id}
     ) do 
     update set ${PayloadTableColumns.json} = $json,
                ${PayloadTableColumns.userCode} = $userCode,
-               ${PayloadTableColumns.uid} = $uid;
+               ${PayloadTableColumns.uid} = $uid,
+               ${PayloadTableColumns.grantId} = $grantId;
 `;
 
 
@@ -28,6 +30,7 @@ export function createPayloadUpsertCommand(payload: IOidcPayload): SqliteStateme
             $name: payload.name,
             $id: payload.id,
             $json: payload.json,
+            $grantId: payload.grantId ?? null,
             $userCode: payload.userCode ?? null,
             $uid: payload.uid ?? null,
         }

@@ -10,6 +10,7 @@ import {createFindByUidQuery} from "./sql/create-find-by-uid-query.ts";
 import {addSeconds} from "date-fns";
 import {createConsumeCommand} from "./sql/create-consume-command.ts";
 import {createDestroyCommand} from "./sql/create-destroy-command.ts";
+import {createRevokeByGrantIdCommand} from "./sql/create-revoke-by-grant-id-command.ts";
 
 export function createOidcSqliteAdapterFactory(database: Database): AdapterFactory {
     return (name) => new OidcSqliteAdapter(database, name);
@@ -30,6 +31,7 @@ export class OidcSqliteAdapter implements Adapter {
                 ...payload,
                 expiresAt: addSeconds(new Date(), expiresIn).toISOString(),
             }),
+            grantId: payload.grantId,
             uid: payload.uid,
             userCode: payload.userCode,
         })
@@ -73,8 +75,10 @@ export class OidcSqliteAdapter implements Adapter {
         await this.executeCommand(command);
     }
 
-    revokeByGrantId(grantId: string): Promise<undefined | void> {
-        throw new Error("Method not implemented.");
+    async revokeByGrantId(grantId: string): Promise<undefined | void> {
+        await this.initialize();
+        const command = createRevokeByGrantIdCommand(this.name, grantId);
+        await this.executeCommand(command);
     }
 
     private async initialize() {

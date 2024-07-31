@@ -7,6 +7,7 @@ export const CREATE_PAYLOAD_TABLE_SQL = `
         ${PayloadTableColumns.json} TEXT NOT NULL,
         ${PayloadTableColumns.userCode} TEXT NULL,
         ${PayloadTableColumns.uid} TEXT NULL,
+        ${PayloadTableColumns.grantId} TEXT NULL,
         PRIMARY KEY (${PayloadTableColumns.name}, ${PayloadTableColumns.id})
     );
 `;

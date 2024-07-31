@@ -127,4 +127,16 @@ describe('OidcSqliteAdapter', () => {
             expect(payload).toEqual(undefined);
         })
     })
+
+    describe('revokeByGrantId', () => {
+        test('when payloads with grant are revoked then deletes payload with grant id from database', async () => {
+            await adapter.upsert('one', {grantId: 'bill'}, 3);
+            await adapter.upsert('two', {grantId: 'bill'}, 3);
+
+            await adapter.revokeByGrantId('bill');
+
+            expect(await adapter.find('one')).toEqual(undefined);
+            expect(await adapter.find('two')).toEqual(undefined);
+        })
+    })
 })
