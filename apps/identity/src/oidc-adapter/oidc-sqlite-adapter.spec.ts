@@ -3,7 +3,7 @@ import {Database} from 'bun:sqlite';
 import {createOidcSqliteAdapterFactory, OidcSqliteAdapter} from "./oidc-sqlite-adapter.ts";
 import type {AdapterFactory} from "oidc-provider";
 import {PAYLOAD_TABLE_NAME} from "./sql/payload-table-name.ts";
-import {OidcPayload} from "./oidc-payload-row.ts";
+import {OidcPayload} from "./oidc-payload.ts";
 
 const SELECT_PAYLOADS_SQL = `select id, name, json from ${PAYLOAD_TABLE_NAME};`
 
@@ -54,5 +54,13 @@ describe('OidcSqliteAdapter', () => {
         expect(result[0].name).toEqual('Grant');
         expect(result[0].id).toEqual('123');
         expect(result[0].asPayload()).toEqual({aud: ['aud'], expiresIn: 40});
+    })
+
+    test('when finding missing payload then returns undefined', async () => {
+        const adapter = factory('Grant');
+
+        const payload = await adapter.find('this-is-an-id');
+
+        expect(payload).toEqual(undefined);
     })
 })

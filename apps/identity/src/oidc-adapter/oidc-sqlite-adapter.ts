@@ -1,8 +1,10 @@
 import type {Adapter, AdapterFactory, AdapterPayload} from "oidc-provider";
-import type {Database} from "bun:sqlite";
-import type {SqliteQuery} from "./sql/sqlite-query.ts";
+import type {Database, Statement} from "bun:sqlite";
+import type {SqliteStatement} from "./sql/sqlite-statement.ts";
 import {CREATE_PAYLOAD_TABLE_SQL} from "./sql/create-payload-table.ts";
-import {createPayloadUpsert} from "./sql/upsert-payload.ts";
+import {createPayloadUpsertCommand} from "./sql/create-upsert-payload-command.ts";
+import {OidcPayload} from "./oidc-payload.ts";
+import {createFindByIdQuery} from "./sql/create-find-by-id-query.ts";
 
 export function createOidcSqliteAdapterFactory(database: Database): AdapterFactory {
     return (name) => new OidcSqliteAdapter(database, name);
@@ -20,11 +22,15 @@ export class OidcSqliteAdapter implements Adapter {
             expiresIn
         })
         await this.initialize();
-        await this.executeCommand(createPayloadUpsert(this.name, id, json));
+        await this.executeCommand(createPayloadUpsertCommand(this.name, id, json));
     }
 
-    find(id: string): Promise<AdapterPayload | undefined | void> {
-        throw new Error("Method not implemented.");
+    async find(id: string): Promise<AdapterPayload | undefined | void> {
+        await this.initialize();
+        const payloads = await this.executeQuery(createFindByIdQuery(this.name, id), OidcPayload);
+        return payloads.length === 1
+            ? payloads[0].asPayload()
+            : undefined;
     }
 
     findByUserCode(userCode: string): Promise<AdapterPayload | undefined | void> {
@@ -53,16 +59,34 @@ export class OidcSqliteAdapter implements Adapter {
         })
     }
 
-    private async executeCommand(query: SqliteQuery) {
+    private async executeQuery<TResult>(statement: SqliteStatement, type: new() => TResult): Promise<TResult[]> {
+        return new Promise<TResult[]>((resolve, reject) => {
+            try {
+                const query = this.database.query(statement.sql)
+                    .as(type);
+
+                const result = statement.params
+                    ? query.all(statement.params)
+                    : query.all();
+
+                query.finalize();
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        })
+    }
+
+    private async executeCommand(statement: SqliteStatement) {
         return new Promise<void>((resolve, reject) => {
             try {
-                const statement = this.database.query(query.sql);
-                if (query.params) {
-                    statement.run(query.params);
+                const command = this.database.query(statement.sql);
+                if (statement.params) {
+                    command.run(statement.params);
                 } else {
-                    statement.run();
+                    command.run();
                 }
-                statement.finalize();
+                command.finalize();
                 resolve();
             } catch (error) {
                 reject(error);

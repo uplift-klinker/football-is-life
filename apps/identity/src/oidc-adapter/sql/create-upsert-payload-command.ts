@@ -1,5 +1,5 @@
 import {PAYLOAD_TABLE_NAME} from "./payload-table-name.ts";
-import type {SqliteQuery} from "./sqlite-query.ts";
+import type {SqliteStatement} from "./sqlite-statement.ts";
 
 const UPSERT_PAYLOAD_SQL = `
     insert into ${PAYLOAD_TABLE_NAME}(name, id, json)
@@ -8,7 +8,7 @@ const UPSERT_PAYLOAD_SQL = `
     update set json = $json;
 `;
 
-export function createPayloadUpsert(name: string, id: string, json: string): SqliteQuery {
+export function createPayloadUpsertCommand(name: string, id: string, json: string): SqliteStatement {
     return {
         sql: UPSERT_PAYLOAD_SQL,
         params: {
