@@ -16,51 +16,65 @@ describe('OidcSqliteAdapter', () => {
         factory = createOidcSqliteAdapterFactory(database);
     })
 
-    test('when adapter is created then returns oidc sqlite adapter', async () => {
-        const adapter = factory('Grant');
+    describe('upsert', () => {
+        test('when adapter is created then returns oidc sqlite adapter', async () => {
+            const adapter = factory('Grant');
 
-        expect(adapter).toBeInstanceOf(OidcSqliteAdapter);
+            expect(adapter).toBeInstanceOf(OidcSqliteAdapter);
+        })
+
+        test('when new payload is upserted then creates record in database', async () => {
+            const adapter = factory('Grant');
+
+            await adapter.upsert('this-is-the-id', {
+                aud: ['audience']
+            }, 3600);
+
+            const result = database.query(SELECT_PAYLOADS_SQL)
+                .as(OidcPayload)
+                .all();
+            expect(result).toHaveLength(1);
+            expect(result[0].name).toEqual('Grant');
+            expect(result[0].id).toEqual('this-is-the-id');
+            expect(result[0].asPayload()).toEqual({
+                aud: ['audience'],
+                expiresIn: 3600
+            });
+        })
+
+        test('when existing payload is upserted then updates the existing record', async () => {
+            const adapter = factory('Grant');
+
+            await adapter.upsert('123', {}, 20);
+            await adapter.upsert('123', {aud: ['aud']}, 40);
+
+            const result = database.query(SELECT_PAYLOADS_SQL)
+                .as(OidcPayload)
+                .all();
+            expect(result).toHaveLength(1);
+            expect(result[0].name).toEqual('Grant');
+            expect(result[0].id).toEqual('123');
+            expect(result[0].asPayload()).toEqual({aud: ['aud'], expiresIn: 40});
+        })
     })
 
-    test('when new payload is upserted then creates record in database', async () => {
-        const adapter = factory('Grant');
+    describe('find', () => {
+        test('when finding missing payload then returns undefined', async () => {
+            const adapter = factory('Grant');
 
-        await adapter.upsert('this-is-the-id', {
-            aud: ['audience']
-        }, 3600);
+            const payload = await adapter.find('this-is-an-id');
 
-        const result = database.query(SELECT_PAYLOADS_SQL)
-            .as(OidcPayload)
-            .all();
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toEqual('Grant');
-        expect(result[0].id).toEqual('this-is-the-id');
-        expect(result[0].asPayload()).toEqual({
-            aud: ['audience'],
-            expiresIn: 3600
-        });
-    })
+            expect(payload).toEqual(undefined);
+        })
 
-    test('when existing payload is upserted then updates the existing record', async () => {
-        const adapter = factory('Grant');
+        test('when finding previously inserted payload then returns payload by id', async () => {
+            const adapter = factory('Grant');
 
-        await adapter.upsert('123', {}, 20);
-        await adapter.upsert('123', {aud: ['aud']}, 40);
+            await adapter.upsert('my-id', {userCode: 'three'}, 2400);
 
-        const result = database.query(SELECT_PAYLOADS_SQL)
-            .as(OidcPayload)
-            .all();
-        expect(result).toHaveLength(1);
-        expect(result[0].name).toEqual('Grant');
-        expect(result[0].id).toEqual('123');
-        expect(result[0].asPayload()).toEqual({aud: ['aud'], expiresIn: 40});
-    })
+            const payload = await adapter.find('my-id');
 
-    test('when finding missing payload then returns undefined', async () => {
-        const adapter = factory('Grant');
-
-        const payload = await adapter.find('this-is-an-id');
-
-        expect(payload).toEqual(undefined);
+            expect(payload).toEqual({userCode: 'three', expiresIn: 2400});
+        })
     })
 })

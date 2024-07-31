@@ -1,5 +1,5 @@
 import type {Adapter, AdapterFactory, AdapterPayload} from "oidc-provider";
-import type {Database, Statement} from "bun:sqlite";
+import type {Database} from "bun:sqlite";
 import type {SqliteStatement} from "./sql/sqlite-statement.ts";
 import {CREATE_PAYLOAD_TABLE_SQL} from "./sql/create-payload-table.ts";
 import {createPayloadUpsertCommand} from "./sql/create-upsert-payload-command.ts";
@@ -17,20 +17,25 @@ export class OidcSqliteAdapter implements Adapter {
     }
 
     async upsert(id: string, payload: AdapterPayload, expiresIn: number): Promise<undefined | void> {
-        const json = JSON.stringify({
-            ...payload,
-            expiresIn
-        })
         await this.initialize();
-        await this.executeCommand(createPayloadUpsertCommand(this.name, id, json));
+        const command = createPayloadUpsertCommand({
+            name: this.name,
+            id: id,
+            json: JSON.stringify({
+                ...payload,
+                expiresIn
+            }),
+            uid: payload.uid,
+            userCode: payload.userCode,
+        })
+        await this.executeCommand(command);
     }
 
     async find(id: string): Promise<AdapterPayload | undefined | void> {
         await this.initialize();
-        const payloads = await this.executeQuery(createFindByIdQuery(this.name, id), OidcPayload);
-        return payloads.length === 1
-            ? payloads[0].asPayload()
-            : undefined;
+        const query = createFindByIdQuery(this.name, id);
+        const result = await this.executeSingleQuery(query, OidcPayload);
+        return result ? result.asPayload() : undefined;
     }
 
     findByUserCode(userCode: string): Promise<AdapterPayload | undefined | void> {
@@ -59,6 +64,13 @@ export class OidcSqliteAdapter implements Adapter {
         })
     }
 
+    private async executeSingleQuery<TResult>(statement: SqliteStatement, type: new() => TResult): Promise<TResult | undefined> {
+        const allMatching = await this.executeQuery(statement, type);
+        return allMatching.length === 1
+            ? allMatching[0]
+            : undefined;
+    }
+
     private async executeQuery<TResult>(statement: SqliteStatement, type: new() => TResult): Promise<TResult[]> {
         return new Promise<TResult[]>((resolve, reject) => {
             try {
@@ -68,7 +80,6 @@ export class OidcSqliteAdapter implements Adapter {
                 const result = statement.params
                     ? query.all(statement.params)
                     : query.all();
-
                 query.finalize();
                 resolve(result);
             } catch (error) {
