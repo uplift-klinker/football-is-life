@@ -7,7 +7,10 @@ describe('createIdentityServer', () => {
 
     beforeEach(async () => {
         server = createIdentityServer({
-            port: 0
+            port: 0,
+            db: {
+                connectionString: ':memory:'
+            }
         });
     })
 
@@ -17,11 +20,19 @@ describe('createIdentityServer', () => {
 
         const response = await fetch(`${baseUrl}/.health/status`);
 
-        expect(response.status).toBe(200);
+        expect(response.status).toEqual(200);
     })
 
     test('when getting address before starting then throws error', async () => {
         await expect(server.baseUrl()).rejects.toThrow(Error);
+    })
+
+    test('when getting openid connect configuration then returns openid connect config', async () => {
+        await server.start();
+        baseUrl = await server.baseUrl();
+
+        const response = await fetch(`${baseUrl}/.well-known/openid-configuration`);
+        expect(response.status).toEqual(200);
     })
 
     afterEach(async () => {

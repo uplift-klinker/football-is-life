@@ -1,9 +1,14 @@
 import express from 'express';
 import {Server} from 'node:http';
 import {createHealthRouter} from "./health/health-router.ts";
+import {Database} from "bun:sqlite";
+import {createOidcProvider} from "./create-oidc-provider.ts";
 
 export type CreateIdentityServerOptions = {
     port: number;
+    db: {
+        connectionString: string;
+    }
 };
 
 export type IdentityServer = {
@@ -14,7 +19,11 @@ export type IdentityServer = {
 
 export function createIdentityServer(options: CreateIdentityServerOptions): IdentityServer {
     const app = express();
+    const database = new Database(options.db.connectionString);
+    const provider = createOidcProvider(`http://localhost:${options.port}`, database);
+
     app.use('/.health', createHealthRouter());
+    app.use(provider.callback());
 
     let server: Server | undefined = undefined;
 
